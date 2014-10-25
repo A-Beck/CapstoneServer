@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block body%}
+<table style="width:100%" border="1">
+    <tr>
+        <th> Device Name </th>
+        <th> Action </th>
+        <th> Completed? </th>
+    </tr>
+    {% for action in actions %}
+    <tr>
+    <td> {{action.device}} </td>
+    <td> {{action.action}} </td>
+    <td> {{action.complete}} </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

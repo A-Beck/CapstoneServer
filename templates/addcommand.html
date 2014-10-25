@@ -1,0 +1,10 @@
+{%  extends  "layout.html" %}
+
+
+{% block body %}
+    <form action="/addcommand" method="post">
+        <input type="text" name="device" autofocus=""/>
+        <input type="text" name="action" autofocus=""/>
+        <input type="submit" value="Submit Command">
+    </form>
+{% endblock %}

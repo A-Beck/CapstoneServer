@@ -1,0 +1,6 @@
+Instructions to run this flask app:
+ - Make sure flask and Flask-SQLAlchemy are installed
+ - Open a python console
+    - navigate into project directory
+    - run command 'from CapstoneServer import db'
+    - run command 'db.create_all()'
