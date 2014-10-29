@@ -8,10 +8,14 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///capstone.db'
 db = SQLAlchemy(app)
 
+
 # TODO: Create a table that holds user credentials
 # TODO: create a table that relates users to devices
 # TODO: Error Checking for all user generated values
 # TODO: Error Checking for DB accesses
+# TODO: Better return codes
+# TODO: Make Everything Pretty
+# TODO: User sessions
 
 
 # This is a class that relates devices to actions they have to perform
@@ -30,12 +34,36 @@ class DeviceAction(db.Model):
         self.time = time.time()
 
 
+# class that hold the status of each device
 class DeviceStatus(db.Model):
     __tablename__ = 'device_status'
     device = db.Column(db.String(20), primary_key=True)
     temp = db.Column(db.Float, unique=False)
     humidity = db.Column(db.Float, unique=False)
     time = db.Column(db.Integer)
+
+
+# class that relates users to their devices
+class UserDevices(db.Model):
+    __tablename__ = 'user_devices'
+    id = db.Column(db.Integer(), primary_key=True)
+    user = db.Column(db.String(80))
+    device = db.Column(db.String(20))
+
+
+# class that holds user credentials
+class Users(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
+
+    def __init__(self, email, password):
+        self.email = email
+        self.password = password
+
+
+#######################################################################################################################
 
 
 #the homepage for our app
@@ -45,15 +73,32 @@ def index():
 
 
 #TODO: create route that will allow log in
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    pass
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user = Users.query.filter_by(email=email).first()
+        if user.password == password:
+            return 'login success'
+        else:
+            return 'login fail'
+    else:
+        return render_template('login.html')
 
 
-#TODO: create route that will allow registration
-@app.route('/register', methods=['POST'])
+#TODO: Error checking
+#TODO: add encryption and stuff
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    pass
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        db.session.add(Users(email, password))
+        db.session.commit()
+        return redirect('/')
+    else:
+        return render_template('register.html')
 
 
 #view actions that have been submitted
@@ -66,12 +111,12 @@ def actions():
 # endpoint for a device - the url it hits to get it's next command
 @app.route('/getcommand/<device>')
 def getcommand(device):
-    # TODO: add logic that will send responses based on info in DB
-    formated_string = ''
-    # This line gets all uncompleted actions for the specified device
-    commands = DeviceAction.query.filter_by(device=device, complete=False)
-    for command in commands:
-        formated_string += ' ' + str(command.action) + ' ' + str(command.id)
+    # # TODO: add logic that will send responses based on info in DB
+    # formated_string = ''
+    # # This line gets all uncompleted actions for the specified device
+    # commands = DeviceAction.query.filter_by(device=device, complete=False)
+    # for command in commands:
+    #     formated_string += ' ' + str(command.action) + ' ' + str(command.id)
     number = random.randint(0, 1)
     return str(number)
 
@@ -119,4 +164,5 @@ def sendtemp(device, temp):
 app.debug = True
 
 if __name__ == '__main__':
+    db.create_all()
     app.run()

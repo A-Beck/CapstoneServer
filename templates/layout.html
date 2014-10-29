@@ -3,11 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Capstone ARA FTW</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
 </head>
 
 <body>
 
 <! TODO: Create Common header that can be used across file >
+    <div class="pure-menu pure-menu-open pure-menu-horizontal">
+        <a href = "/"> Capstone: ARA </a>
+        <ul>
+            <li> <a href="/login"> Login </a></li>
+            <li> <a href="/register"> Register </a> </li>
+            <li> <a href="/actions"> Pending Actions </a> </li>
+            <li> <a href="/addcommand"> Add a command </a> </li>
+        </ul>
+    </div>
 
 {% block body %}
 {% endblock %}

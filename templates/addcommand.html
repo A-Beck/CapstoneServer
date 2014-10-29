@@ -2,9 +2,23 @@
 
 
 {% block body %}
-    <form action="/addcommand" method="post">
-        <input type="text" name="device" autofocus=""/>
-        <input type="text" name="action" autofocus=""/>
-        <input type="submit" value="Submit Command">
+    <form class="pure-form pure-form-aligned" action="/addcommand" method="post">
+    <fieldset>
+
+        <div class="pure-control-group">
+            <label for="device">Device Name</label>
+            <input id="device" type="text" placeholder="Device Name" name="device"/>
+        </div>
+
+        <div class="pure-control-group">
+            <label for="action">Action</label>
+            <input id="action" type="text" placeholder="Device Name" name="action"/>
+        </div>
+
+        <div class="pure-controls">
+            <button type="submit" class="pure-button pure-button-primary">Submit</button>
+        </div>
+
+        </fieldset>
     </form>
 {% endblock %}

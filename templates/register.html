@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <form class="pure-form pure-form-aligned" action="/register" method="post">
+        <fieldset>
+
+            <div class="pure-control-group">
+                <label for="email">Email Address</label>
+                <input id="email" type="text" placeholder="Email" name="email"/>
+            </div>
+
+            <div class="pure-control-group">
+                <label for="action">Password</label>
+                <input id="action" type="password" placeholder="Password" name="password"/>
+            </div>
+
+            <div class="pure-controls">
+                <button type="submit" class="pure-button pure-button-primary">Submit</button>
+            </div>
+
+        </fieldset>
+    </form>
+{% endblock %}
