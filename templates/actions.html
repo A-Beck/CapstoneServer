@@ -1,22 +1,26 @@
 {% extends "layout.html" %}
 
 {% block body%}
-<table class="pure-table" border="1">
-    <thead>
-        <tr>
-            <th> Device Name </th>
-            <th> Action </th>
-            <th> Completed? </th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for action in actions %}
-        <tr>
-        <td> {{action.device}} </td>
-        <td> {{action.action}} </td>
-        <td> {{action.complete}} </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="pure-g">
+        <div class="pure-u-1-1">
+            <table class="pure-table" border="1">
+                <thead>
+                    <tr>
+                        <th> Device Name </th>
+                        <th> Action </th>
+                        <th> Completed? </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for action in actions %}
+                    <tr>
+                    <td> {{action.device}} </td>
+                    <td> {{action.action}} </td>
+                    <td> {{action.complete}} </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}
