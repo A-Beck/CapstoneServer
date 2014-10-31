@@ -4,25 +4,35 @@
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
     <title>Capstone ARA FTW</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+
+
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/grids-responsive-old-ie-min.css">
+    <![endif]-->
+    <!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/grids-responsive-min.css">
+    <!--<![endif]-->
+
+    <link rel="stylesheet" href="../static/capstone-styles.css">
+
 </head>
 
 <body>
 
-<! TODO: Create Common header that can be used across file >
-    <div class="pure-menu pure-menu-open pure-menu-horizontal">
-        <a href = "/"> Capstone: ARA </a>
+    <div class="c-wrapper">
+    <div class="pure-menu pure-menu-open pure-menu-horizontal c-menu">
+        <a href="/" class="pure-menu-heading"> Capstone: ARA </a>
         <ul>
-            <li> <a href="/login"> Login </a></li>
-            <li> <a href="/register"> Register </a> </li>
-            <li> <a href="/actions"> Pending Actions </a> </li>
-            <li> <a href="/addcommand"> Add a command </a> </li>
+            <li><a href="/profile">Home</a></li>
+            <li><a href="/actions"> Pending Actions </a></li>
+            <li><a href="/addcommand"> Add a command </a></li>
         </ul>
     </div>
 
 
-{% block body %}
-{% endblock %}
-
+    {% block body %}
+    {% endblock %}
+    </div>
 
 </body>
 </html>

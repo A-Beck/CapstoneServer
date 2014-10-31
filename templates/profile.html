@@ -1,0 +1,14 @@
+{% extends  "layout.html" %}
+
+{% block body %}
+    <h1> Hello {{ user.email }}</h1>
+    <a href="/logout">Log out?</a>
+    <div class="pure-g">
+        <div class="c-center pure-u-1-2">
+            Profile control options here (ie change password, delete account)
+        </div>
+        <div class="c-center pure-u-1-2">
+            info for devices here (ie current temps, incomplete commands)
+        </div>
+    </div>
+{% endblock %}
