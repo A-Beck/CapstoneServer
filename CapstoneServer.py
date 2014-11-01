@@ -100,7 +100,14 @@ def register():
 @app.route('/actions')
 @login_required
 def actions():
-    all_actions = DeviceAction.query.all()
+    user = current_user
+    user_devices = UserDevices.query.filter_by(email=user.email).all()
+    all_actions = []
+    for user_device in user_devices:
+        device = user_device.device
+        device_actions = DeviceAction.query.filter_by(device=device).all()
+        for d_a in device_actions:
+            all_actions.append(d_a)
     return render_template('actions.html', actions=all_actions)
 
 
@@ -179,5 +186,4 @@ app.debug = True
 
 if __name__ == '__main__':
     db.create_all()
-    #app.run(host='0.0.0.0')
     app.run()
