@@ -1,0 +1,5 @@
+CapstoneServer
+Flask==0.10.1
+Flask-SQLAlchemy==2.0
+Flask-Login=0.2.11
+Werkzeug==0.9.4

@@ -10,7 +10,11 @@
 
                     <div class="pure-control-group">
                         <label for="device">Device Name</label>
-                        <input id="device" type="text" placeholder="Device Name" name="device"/>
+                        <select id="device" name="device">
+                            {% for device in user_devices %}
+                            <option> {{ device.device }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="pure-control-group">

@@ -1,5 +1,6 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+import time
 
 db = SQLAlchemy()
 
@@ -8,10 +9,16 @@ db = SQLAlchemy()
 class DeviceAction(db.Model):
     __tablename__ = 'device_action'
     id = db.Column(db.Integer, primary_key=True)
-    device = db.Column(db.String(20), unique=False)
+    device = db.Column(db.String(20), unique=True)
     action = db.Column(db.String(50), unique=False)
     time = db.Column(db.Integer)
     complete = db.Column(db.Boolean, unique=False)
+
+    def __init__(self, device, action):
+        self.device = device
+        self.action = action
+        self.time = time.time()
+        self.complete = False
 
 
 # class that hold the status of each device
@@ -22,13 +29,26 @@ class DeviceStatus(db.Model):
     humidity = db.Column(db.Float, unique=False)
     time = db.Column(db.Integer)
 
+    def __init__(self, device, t=0, h=0):
+        self.temp = t
+        self.humidity = h
+        self.device = device
+
+    def update(self, t=0, h=0):
+        self.temp = t
+        self.humidity = h
+
 
 # class that relates users to their devices
 class UserDevices(db.Model):
     __tablename__ = 'user_devices'
-    id = db.Column(db.Integer(), primary_key=True)
-    user = db.Column(db.String(80))
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    email = db.Column(db.String(80))
     device = db.Column(db.String(20))
+
+    def __init__(self, email, device):
+        self.email = email
+        self.device = device
 
 
 # class that holds user credentials

@@ -4,10 +4,12 @@ from flask.ext.login import LoginManager, login_required, login_user, logout_use
 import time
 import random
 
+
 # TODO: Error Checking for all user generated values
 # TODO: Error Checking for DB accesses
 # TODO: Better return codes to send to msp
-# TODO: Better user exp on site (logout on every page, clean easy interface)
+# TODO: Better user exp on site
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///capstone.db'
@@ -19,24 +21,37 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+# required to use flask-login package
 @login_manager.user_loader
 def user_loader(user_id):
     return User.query.get(user_id)
 
 
-# the homepage for our app
+# The landing page for our app
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
+
+# A user's home page
 @app.route('/profile')
 @login_required
 def profile():
     user = current_user
-    return render_template('profile.html', user=user)
+    user_devices = UserDevices.query.filter_by(email=user.email).all()
+    devices = []
+    for item in user_devices:
+        device_name = item.device
+        device_status = DeviceStatus.query.get(device_name)
+        devices.append(device_status)
+    return render_template('profile.html', user=user, devices_statuses=devices)
 
 
+# logs a user out and redirects them to the homepage
 @app.route("/logout", methods=["GET"])
 @login_required
 def logout():
@@ -47,6 +62,7 @@ def logout():
     db.session.commit()
     logout_user()
     return redirect('/')
+
 
 
 @app.route('/login', methods=['POST'])
@@ -69,15 +85,18 @@ def login():
 def register():
     email = request.form['email']
     password = request.form['password']
-    user = User(email, password, True)
-    db.session.add(user)
-    db.session.commit()
-    login_user(user)
-    return redirect('/profile')
+    user_list = User.query.filter_by(email=email).all()
+    if len(user_list) > 0:
+        return redirect('/')
+    else:
+        user = User(email, password, True)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect('/profile')
 
 
 #view actions that have been submitted
-#TODO: only see actions for that user's devices
 @app.route('/actions')
 @login_required
 def actions():
@@ -86,7 +105,6 @@ def actions():
 
 
 #adding a command to a device's command queue
-# Todo: only show users devices in dropdown instead of text input
 @app.route('/addcommand', methods=['POST', 'GET'])
 @login_required
 def addcommand():
@@ -97,7 +115,24 @@ def addcommand():
         db.session.commit()
         return redirect('/actions')
     else:
-        return render_template('addcommand.html')
+        user = current_user
+        device_list = UserDevices.query.filter_by(email=user.email).all()
+        if len(device_list) == 0:
+            return 'No devices to add actions to'
+        else:
+            return render_template('addcommand.html', user_devices=device_list)
+
+
+
+@app.route('/adddevice', methods=['POST'])
+@login_required
+def adddevice():
+    user = current_user
+    device = request.form['device']
+    db.session.add(UserDevices(user.email, device))
+    db.session.add(DeviceStatus(device))
+    db.session.commit()
+    return redirect('/profile')
 
 
 # endpoint for a device - the url it hits to get it's next command
@@ -105,9 +140,9 @@ def addcommand():
 def getcommand(device):
     # TODO: add logic that will send responses based on info in DB
     # This line gets all uncompleted actions for the specified device
-    command = DeviceAction.query.filter_by(device=device, complete=False).first()
-    formated_string = str(command.action) + ' ' + str(command.id)
-    print formated_string
+    # command = DeviceAction.query.filter_by(device=device, complete=False).first()
+    # formated_string = str(command.action) + ' ' + str(command.id)
+    # print formated_string
     number = random.randint(0, 1)
     return str(number)
 
@@ -144,4 +179,5 @@ app.debug = True
 
 if __name__ == '__main__':
     db.create_all()
+    #app.run(host='0.0.0.0')
     app.run()
