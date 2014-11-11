@@ -1,10 +1,10 @@
 {% extends  "layout.html" %}
 
 {% block body %}
-    <h3> Hello {{ user.email }}</h3>
+    <h3 class = c-center> Hello {{ user.email }}</h3>
     <div class="pure-g">
-        <div class="c-center pure-u-1-2">
-            <h5>Your devices </h5>
+        <div class="c-center pure-u-1 pure-u-md-1-2 pure-u-lg-1-2">
+            <h5> Your devices: </h5>
             <ul>
                 {% for device in devices_statuses %}
                     <li> {{ device.device }} </li>
@@ -14,29 +14,32 @@
                 <fieldset>
                     <input id="device" type="text" placeholder="Device Name" name="device"/>
                     <button type="submit" class="pure-button pure-button-primary">Add Device</button>
-
                 </fieldset>
             </form>
         </div>
-        <div class="c-center pure-u-1-2">
-            <table class="pure-table  pure-table-bordered" border="1">
-                <thead>
-                <tr>
-                    <th> Device Name</th>
-                    <th> Temperature</th>
-                    <th> Humidity</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for device in devices_statuses %}
+
+        <div class="c-center pure-u-1 pure-u-md-1-2 pure-u-lg-1-2">
+            <div class="c_scroll">
+                <table class="pure-table pure-table-bordered" border="1">
+                    <thead>
                     <tr>
-                        <td> {{ device.device }} </td>
-                        <td> {{ device.temp }} </td>
-                        <td> {{ device.humidity }} </td>
+                        <th> Device Name</th>
+                        <th> Temperature</th>
+                        <th> Humidity</th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for device in devices_statuses %}
+                        <tr>
+                            <td> {{ device.device }} </td>
+                            <td> {{ device.temp }} </td>
+                            <td> {{ device.humidity }} </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 {% endblock %}

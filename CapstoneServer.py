@@ -37,18 +37,23 @@ def about():
     return render_template('about.html')
 
 
-# A user's home page
-@app.route('/profile')
-@login_required
-def profile():
-    user = current_user
-    user_devices = UserDevices.query.filter_by(email=user.email).all()
-    devices = []
-    for item in user_devices:
-        device_name = item.device
-        device_status = DeviceStatus.query.get(device_name)
-        devices.append(device_status)
-    return render_template('profile.html', user=user, devices_statuses=devices)
+@app.route('/login', methods=['POST'])
+def login():
+    """ Login a user """
+    email = request.form['email']
+    password = request.form['password']
+    # get username and password
+    user = User.query.filter_by(email=email).first()
+    if user is None:  # check if the user exists
+        return 'login fail'
+    if user.check_password(password):  # if the user exists, check credentials
+        user.authenticated = True
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect('/profile')
+    else:
+        return 'login fail'
 
 
 # logs a user out and redirects them to the homepage
@@ -62,22 +67,6 @@ def logout():
     db.session.commit()
     logout_user()
     return redirect('/')
-
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    email = request.form['email']
-    password = request.form['password']
-    user = User.query.filter_by(email=email).first()
-    if user.check_password(password):
-        user.authenticated = True
-        db.session.add(user)
-        db.session.commit()
-        login_user(user)
-        return redirect('/profile')
-    else:
-        return 'login fail'
 
 
 # TODO: Error checking
@@ -94,6 +83,20 @@ def register():
         db.session.commit()
         login_user(user)
         return redirect('/profile')
+
+
+# A user's home page
+@app.route('/profile')
+@login_required
+def profile():
+    user = current_user
+    user_devices = UserDevices.query.filter_by(email=user.email).all()
+    devices = []
+    for item in user_devices:
+        device_name = item.device
+        device_status = DeviceStatus.query.get(device_name)
+        devices.append(device_status)
+    return render_template('profile.html', user=user, devices_statuses=devices)
 
 
 #view actions that have been submitted
@@ -130,15 +133,32 @@ def addcommand():
             return render_template('addcommand.html', user_devices=device_list)
 
 
+@app.route('/removecommand/id=<id>', methods=['POST'])
+@login_required
+def removecommand(id):
+    if request.method == 'POST':
+        id = int(id)
+        action = DeviceAction.query.get(id)
+        if action is not None:
+            db.session.delete(action)
+            db.session.commit()
+    return redirect('/actions')
+
 
 @app.route('/adddevice', methods=['POST'])
 @login_required
 def adddevice():
     user = current_user
     device = request.form['device']
-    db.session.add(UserDevices(user.email, device))
-    db.session.add(DeviceStatus(device))
-    db.session.commit()
+    # Check to see if there any devices under the same name
+    possible_devices = UserDevices.query.filter_by(device=device).all()
+    # Do not allow duplicate names
+    if len(possible_devices) == 0:
+        # Relate user to device
+        db.session.add(UserDevices(user.email, device))
+        # Update the status for the device
+        db.session.add(DeviceStatus(device))
+        db.session.commit()
     return redirect('/profile')
 
 
@@ -148,8 +168,11 @@ def getcommand(device):
     # TODO: add logic that will send responses based on info in DB
     # This line gets all uncompleted actions for the specified device
     # command = DeviceAction.query.filter_by(device=device, complete=False).first()
-    # formated_string = str(command.action) + ' ' + str(command.id)
-    # print formated_string
+    # if command is not None:
+    #   formated_string = str(command.action) + ' ' + str(command.id)
+    #   return formated_string
+    # else:
+    #   return str(0)
     number = random.randint(0, 1)
     return str(number)
 

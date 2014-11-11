@@ -9,10 +9,10 @@ db = SQLAlchemy()
 class DeviceAction(db.Model):
     __tablename__ = 'device_action'
     id = db.Column(db.Integer, primary_key=True)
-    device = db.Column(db.String(20), unique=True)
-    action = db.Column(db.String(50), unique=False)
+    device = db.Column(db.String(50))
+    action = db.Column(db.String(200))
     time = db.Column(db.Integer)
-    complete = db.Column(db.Boolean, unique=False)
+    complete = db.Column(db.Boolean)
 
     def __init__(self, device, action):
         self.device = device
@@ -21,12 +21,13 @@ class DeviceAction(db.Model):
         self.complete = False
 
 
+
 # class that hold the status of each device
 class DeviceStatus(db.Model):
     __tablename__ = 'device_status'
-    device = db.Column(db.String(20), primary_key=True)
-    temp = db.Column(db.Float, unique=False)
-    humidity = db.Column(db.Float, unique=False)
+    device = db.Column(db.String(50), primary_key=True)
+    temp = db.Column(db.Float)
+    humidity = db.Column(db.Float)
     time = db.Column(db.Integer)
 
     def __init__(self, device, t=0, h=0):
@@ -43,8 +44,8 @@ class DeviceStatus(db.Model):
 class UserDevices(db.Model):
     __tablename__ = 'user_devices'
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    email = db.Column(db.String(80))
-    device = db.Column(db.String(20))
+    email = db.Column(db.String(255))
+    device = db.Column(db.String(50))
 
     def __init__(self, email, device):
         self.email = email

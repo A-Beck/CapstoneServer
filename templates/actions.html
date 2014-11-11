@@ -2,25 +2,33 @@
 
 {% block body%}
     <div class="pure-g">
-        <div class="c-center pure-u-1-2">
-            <table class="pure-table  pure-table-bordered" border="1">
-                <thead>
+        <div class="c-center pure-u-1 pure-u-md-1-2">
+            <div class="c_scroll">
+                <table class="pure-table  pure-table-bordered" border="1">
+                    <thead>
                     <tr>
                         <th> Device Name </th>
                         <th> Action </th>
                         <th> Completed? </th>
+                        <th> Delete </th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     {% for action in actions %}
-                    <tr>
-                    <td> {{action.device}} </td>
-                    <td> {{action.action}} </td>
-                    <td> {{action.complete}} </td>
-                    </tr>
+                        <tr>
+                            <td> {{action.device}} </td>
+                            <td> {{action.action}} </td>
+                            <td> {{action.complete}} </td>
+                            <td>
+                                <form action="/removecommand/id={{ action.id }}" method="post">
+                                    <button type="submit" class="pure-button pure-button-primary button-remove" value="id">X</button>
+                                </form>
+                            </td>
+                        </tr>
                     {% endfor %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 {% endblock %}
