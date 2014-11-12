@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect
-from models import User, UserDevices, DeviceStatus, DeviceAction, db
+from models import User, UserDevices, DeviceStatus, DeviceAction, DeviceSettings, db
 from flask.ext.login import LoginManager, login_required, login_user, logout_user, current_user
-import time
 import random
 
 
@@ -31,6 +30,7 @@ def user_loader(user_id):
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/about')
 def about():
@@ -93,13 +93,12 @@ def profile():
     user_devices = UserDevices.query.filter_by(email=user.email).all()
     devices = []
     for item in user_devices:
-        device_name = item.device
-        device_status = DeviceStatus.query.get(device_name)
-        devices.append(device_status)
+        device_status = DeviceStatus.query.get(item.device_id)
+        devices.append({'Name': item.device, 'Temp': device_status.temp, 'Humidity': device_status.humidity})
     return render_template('profile.html', user=user, devices_statuses=devices)
 
 
-#view actions that have been submitted
+# view actions that have been submitted
 @app.route('/actions')
 @login_required
 def actions():
@@ -107,37 +106,47 @@ def actions():
     user_devices = UserDevices.query.filter_by(email=user.email).all()
     all_actions = []
     for user_device in user_devices:
-        device = user_device.device
-        device_actions = DeviceAction.query.filter_by(device=device).all()
+        device_id = user_device.device_id
+        device_actions = DeviceAction.query.filter_by(device_id=device_id).all()
         for d_a in device_actions:
-            all_actions.append(d_a)
-    return render_template('actions.html', actions=all_actions)
+            all_actions.append({'Name': user_device.device, 'Action': d_a.action, 'Action id': d_a.action_id,
+                                'Device_id': device_id, 'Complete': d_a.complete})
+    return render_template('actions.html', actions=all_actions, user_devices=user_devices)
+
+
+@app.route('/devices')
+@login_required
+def devices():
+    user = current_user
+    users_devices = UserDevices.query.filter_by(email=user.email).all()
+    device_list = []
+    for device in users_devices:
+        settings = DeviceSettings.query.get(device.device_id)
+        device_list.append({'Name': device.device, 'id': device.device_id, 'Man': device.type,
+                            'Upper Temp': settings.upper_temp, 'Lower Temp': settings.lower_temp})
+    return render_template('devices.html', device_list=device_list)
 
 
 #adding a command to a device's command queue
-@app.route('/addcommand', methods=['POST', 'GET'])
+@app.route('/addcommand', methods=['POST'])
 @login_required
 def addcommand():
     if request.method == 'POST':
+        user = current_user
         device = request.form['device']
         action = request.form['action']
-        db.session.add(DeviceAction(device, action))
-        db.session.commit()
+        device = UserDevices.query.filter_by(device=device, email=user.email).first()
+        if device is not None:
+            db.session.add(DeviceAction(device.device_id, action))
+            db.session.commit()
         return redirect('/actions')
-    else:
-        user = current_user
-        device_list = UserDevices.query.filter_by(email=user.email).all()
-        if len(device_list) == 0:
-            return 'No devices to add actions to'
-        else:
-            return render_template('addcommand.html', user_devices=device_list)
 
 
-@app.route('/removecommand/id=<id>', methods=['POST'])
+@app.route('/removecommand', methods=['POST'])
 @login_required
-def removecommand(id):
+def removecommand():
     if request.method == 'POST':
-        id = int(id)
+        id = int(request.form['id'])
         action = DeviceAction.query.get(id)
         if action is not None:
             db.session.delete(action)
@@ -150,22 +159,61 @@ def removecommand(id):
 def adddevice():
     user = current_user
     device = request.form['device']
+    device_id = int(request.form['device_id'])
     # Check to see if there any devices under the same name
-    possible_devices = UserDevices.query.filter_by(device=device).all()
-    # Do not allow duplicate names
-    if len(possible_devices) == 0:
+    possible_devices = UserDevices.query.filter_by(device=device, email=user.email).all()
+    device_with_same_id = UserDevices.query.get(device_id)
+    # Do not allow duplicate names for same user, unique id's
+    if len(possible_devices) == 0 and device_with_same_id is None:
         # Relate user to device
-        db.session.add(UserDevices(user.email, device))
-        # Update the status for the device
-        db.session.add(DeviceStatus(device))
+        user_device = UserDevices(device_id, user.email, device)
+        db.session.add(user_device)
         db.session.commit()
+        # Update the status for the device
+        db.session.add(DeviceStatus(user_device.device_id))
+        db.session.add(DeviceSettings(user_device.device_id))
+        db.session.commit()
+
+    return redirect('/profile')
+
+
+@app.route('/changesettings', methods=['POST'])
+@login_required
+def change_settings():
+    device_id = int(request.form['id'])
+    if request.form['type'] == 'get':
+        settings = DeviceSettings.query.get(device_id)
+        return render_template('changesettings.html', settings=settings)
+    else:
+        device_settings = DeviceSettings.query.get(device_id)
+        upper_limit = float(request.form['Upper_limit'])
+        lower_limit = float(request.form['Lower_limit'])
+        device_settings.update(higher_limit=upper_limit, lower_limit=lower_limit)
+        db.session.commit()
+    return redirect('/profile')
+
+
+
+@app.route('/removedevice', methods=['POST'])
+@login_required
+def remove_device():
+    device_id = int(request.form['id'])
+    device_status = DeviceStatus.query.get(device_id)
+    device_settings = DeviceSettings.query.get(device_id)
+    device_actions = DeviceAction.query.filter_by(device_id=device_id).all()
+    db.session.delete(device_settings)
+    db.session.delete(device_status)
+    for action in device_actions:
+        db.session.delete(action)
+    users_device = UserDevices.query.get(device_id)
+    db.session.delete(users_device)
+    db.session.commit()
     return redirect('/profile')
 
 
 # endpoint for a device - the url it hits to get it's next command
 @app.route('/getcommand/<device>')
 def getcommand(device):
-    # TODO: add logic that will send responses based on info in DB
     # This line gets all uncompleted actions for the specified device
     # command = DeviceAction.query.filter_by(device=device, complete=False).first()
     # if command is not None:
@@ -181,12 +229,9 @@ def getcommand(device):
 def completetask(taskid, device):
     try:
         device_action = DeviceAction.query.get(taskid)
-        if device_action.device == device:
-            device_action.complete = True
-            db.session.commit()
-            return '1'
-        else:
-            return '0'
+        device_action.complete = True
+        db.session.commit()
+        return '1'
     except Exception as e:
         print e
         return '0'
@@ -195,9 +240,8 @@ def completetask(taskid, device):
 @app.route('/sendtemp/device=<device>&temp=<temp>')
 def sendtemp(device, temp):
     try:
-        device = DeviceStatus.query.get(device)
-        device.temp = float(temp)
-        device.time = time.time()
+        device = DeviceStatus.query.filter_by(device).first()
+        device.update(temp=temp)
         db.session.commit()
         return '1'
     except Exception as e:

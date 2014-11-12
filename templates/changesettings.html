@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block body %}
+     <div class="pure-g">
+        <div class="c-center pure-u-1 pure-u-md-1-2"">
+            <h3> Change Settings </h3>
+            <form class="pure-form pure-form-aligned" action="/changesettings" method="post">
+                <fieldset>
+
+                    <input type="hidden" name="id" value="{{settings.device_id }}" />
+                     <input type="hidden" name="type" value="update" />
+
+                    <div class="pure-control-group">
+                        <label for="email">New Upper Limit</label>
+                        <input id="Upper_limit" type="text"  name="Upper_limit" value="{{ settings.upper_temp }}"/>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="action">New Lower Limit</label>
+                        <input id="Lower_limit" type="text" name="Lower_limit" value="{{ settings.lower_temp }}"/>
+                    </div>
+
+                    <div class="pure-controls">
+                        <button type="submit" class="pure-button pure-button-primary">Submit Change</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+{% endblock %}

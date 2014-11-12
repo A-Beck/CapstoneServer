@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block body%}
+    <div class="pure-g">
+        <div class="c-center pure-u-1 pure-u-md-1-2 pure-u-lg-1-2">
+            <div class="c_scroll">
+                <table class="pure-table pure-table-bordered" border="1">
+                    <thead>
+                    <tr>
+                        <th> Device Name</th>
+                        <th> Device Manufacturer </th>
+                        <th> Upper Temp </th>
+                        <th> Lower Temp</th>
+                        <th> Change Settings </th>
+                        <th> Remove Device </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for device in device_list %}
+                        <tr>
+                            <td> {{ device['Name'] }} </td>
+                            <td> {{ device['Man'] }}</td>
+                            <td> {{ device['Upper Temp'] }}</td>
+                            <td> {{ device['Lower Temp'] }}</td>
+                            <td>
+                                <form action="/changesettings" method="post">
+                                    <input type="hidden" name="id" value="{{ device['id'] }}" />
+                                    <input type="hidden" name="type" value="get" />
+                                    <button type="submit" class="pure-button pure-button-primary" value="id">X</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="/removedevice" method="post">
+                                    <input type="hidden" name="id" value="{{ device['id'] }}" />
+                                    <button type="submit" class="pure-button pure-button-primary button-remove" value="id">X</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="c-center pure-u-1 pure-u-md-1-2 pure-u-lg-1-2">
+            <form class="pure-form pure-form-aligned" action="/adddevice" method="post">
+                <h3> Add a device </h3>
+                <fieldset>
+                    <div class="pure-control-group">
+                        <input id="device" type="text" placeholder="Device Name" name="device"/>
+                    </div>
+                    <div class="pure-control-group">
+
+                        <input id="device_id" type="text" placeholder="Device ID" name="device_id" />
+                    </div>
+                    <div class="pure-controls">
+                        <button type="submit" class="pure-button pure-button-primary">Add Device</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+{% endblock %}

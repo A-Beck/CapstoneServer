@@ -21,10 +21,10 @@
 }
 
 .button-remove {
-    background: rgb(202, 60, 60); /* this is a maroon */
+    background: rgb(202, 60, 60); /* this is red */
 }
 
 .c_scroll {
-    overflow: scroll;
+    overflow: auto;
     overflow-y: hidden;
 }
