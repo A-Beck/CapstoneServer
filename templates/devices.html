@@ -2,15 +2,16 @@
 
 {% block body%}
     <div class="pure-g">
-        <div class="c-center pure-u-1 pure-u-md-1-2 pure-u-lg-1-2">
+        <div class="c-center pure-u-1 ">
             <div class="c_scroll">
                 <table class="pure-table pure-table-bordered" border="1">
                     <thead>
                     <tr>
-                        <th> Device Name</th>
+                        <th> Device Name </th>
+                        <th> Device Type </th>
                         <th> Device Manufacturer </th>
                         <th> Upper Temp </th>
-                        <th> Lower Temp</th>
+                        <th> Lower Temp </th>
                         <th> Change Settings </th>
                         <th> Remove Device </th>
                     </tr>
@@ -19,6 +20,7 @@
                     {% for device in device_list %}
                         <tr>
                             <td> {{ device['Name'] }} </td>
+                            <td> {{ device['Type']  }}</td>
                             <td> {{ device['Man'] }}</td>
                             <td> {{ device['Upper Temp'] }}</td>
                             <td> {{ device['Lower Temp'] }}</td>
@@ -42,20 +44,39 @@
             </div>
         </div>
 
-        <div class="c-center pure-u-1 pure-u-md-1-2 pure-u-lg-1-2">
+        <div class="c-center pure-u-1 ">
             <form class="pure-form pure-form-aligned" action="/adddevice" method="post">
                 <h3> Add a device </h3>
                 <fieldset>
                     <div class="pure-control-group">
+                        <label for="device">Device Name</label>
                         <input id="device" type="text" placeholder="Device Name" name="device"/>
                     </div>
                     <div class="pure-control-group">
-
+                        <label for="device_id">Device ID</label>
                         <input id="device_id" type="text" placeholder="Device ID" name="device_id" />
                     </div>
+
+                    <div class="pure-control-group">
+                        <label for="man">Manufacturer</label>
+                        <select id="man" name="man">
+                            <option>GE</option>
+                            <option>Yantech</option>
+                        </select>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="type">Device Type</label>
+                        <select id="type" name="type">
+                            <option>Air Conditioner</option>
+                            <option>Bluetooth Speaker</option>
+                        </select>
+                    </div>
+
                     <div class="pure-controls">
                         <button type="submit" class="pure-button pure-button-primary">Add Device</button>
                     </div>
+
                 </fieldset>
             </form>
         </div>

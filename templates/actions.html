@@ -2,7 +2,7 @@
 
 {% block body%}
     <div class="pure-g">
-        <div class="c-center pure-u-1 pure-u-md-1-2">
+        <div class="c-center pure-u-1">
         <h3> Pending Actions </h3>
             <div class="c_scroll">
                 <table class="pure-table  pure-table-bordered" border="1">
@@ -10,7 +10,6 @@
                     <tr>
                         <th> Device </th>
                         <th> Action </th>
-                        <th> Completed? </th>
                         <th> Delete </th>
                     </tr>
                     </thead>
@@ -19,10 +18,9 @@
                         <tr>
                             <td> {{action['Name']}} </td>
                             <td> {{action['Action']}} </td>
-                            <td> {{action['Complete']}} </td>
                             <td>
                                 <form action="/removecommand" method="post">
-                                    <input type="hidden" name="id" value="{{ action['Device_id'] }}" />
+                                    <input type="hidden" name="id" value="{{ action['Action id'] }}" />
                                     <button type="submit" class="pure-button pure-button-primary button-remove" value="id">X</button>
                                 </form>
                             </td>
@@ -32,8 +30,8 @@
                 </table>
             </div>
         </div>
-        <div class="pure-g">
-        <div class="c-center pure-u-1 pure-u-md-1-2">
+
+        <div class="c-center pure-u-1">
             <form class="pure-form pure-form-aligned" action="/addcommand" method="post">
                 <h3> Add an Action to Execute </h3>
                 <fieldset>
@@ -41,7 +39,7 @@
                         <label for="device">Device Name</label>
                         <select id="device" name="device">
                             {% for device in user_devices %}
-                            <option> {{ device.device }}</option>
+                            <option> {{ device.device }} ({{ device.device_type }})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -49,11 +47,9 @@
                     <div class="pure-control-group">
                         <label for="action">Action</label>
                         <select id="action" name="action">
-                            <option>Toggle Power</option>
-                            <option>Increase Room Temp</option>
-                            <option>Decrease Room Temp</option>
-                            <option>Increase Fan Speed</option>
-                            <option>Decrease Fan Speed</option>
+                           {%   for action in possible_actions %}
+                           <option> {{ action[0] }} ({{ action[1] }}) </option>
+                           {% endfor %}
                         </select>
                     </div>
 
@@ -65,5 +61,5 @@
             </form>
         </div>
     </div>
-    </div>
+
 {% endblock %}

@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect
-from models import User, UserDevices, DeviceStatus, DeviceAction, DeviceSettings, db
+from flask import Flask, render_template, request, redirect, url_for
+from models import User, UserDevices, DeviceStatus, DeviceAction, DeviceSettings, Codes, db
 from flask.ext.login import LoginManager, login_required, login_user, logout_user, current_user
 import random
 
@@ -105,13 +105,20 @@ def actions():
     user = current_user
     user_devices = UserDevices.query.filter_by(email=user.email).all()
     all_actions = []
+    all_possible_actions = set()
     for user_device in user_devices:
         device_id = user_device.device_id
         device_actions = DeviceAction.query.filter_by(device_id=device_id).all()
         for d_a in device_actions:
-            all_actions.append({'Name': user_device.device, 'Action': d_a.action, 'Action id': d_a.action_id,
-                                'Device_id': device_id, 'Complete': d_a.complete})
-    return render_template('actions.html', actions=all_actions, user_devices=user_devices)
+            if (d_a.complete == False):
+                all_actions.append({'Name': user_device.device, 'Action': d_a.action, 'Action id': d_a.action_id,
+                                    'Device_id': device_id, 'Complete': d_a.complete})
+        available_actions = get_available_actions(user_device.device_type)
+        for action in available_actions:
+            all_possible_actions.add((action, user_device.device_type))
+
+    return render_template('actions.html', actions=all_actions, user_devices=user_devices,
+                           possible_actions=list(all_possible_actions))
 
 
 @app.route('/devices')
@@ -122,8 +129,9 @@ def devices():
     device_list = []
     for device in users_devices:
         settings = DeviceSettings.query.get(device.device_id)
-        device_list.append({'Name': device.device, 'id': device.device_id, 'Man': device.type,
-                            'Upper Temp': settings.upper_temp, 'Lower Temp': settings.lower_temp})
+        device_list.append({'Name': device.device, 'id': device.device_id, 'Man': device.manufacturer,
+                            'Type': device.device_type, 'Upper Temp': settings.upper_temp,
+                            'Lower Temp': settings.lower_temp})
     return render_template('devices.html', device_list=device_list)
 
 
@@ -132,13 +140,28 @@ def devices():
 @login_required
 def addcommand():
     if request.method == 'POST':
+
         user = current_user
         device = request.form['device']
         action = request.form['action']
+
+        #extra junk comes in with the form, clean it up
+        def cleanup(input_str):
+            ret = ''
+            for c in input_str:
+                if c == '(':
+                    break
+                ret += c
+            return ret.strip(' ')
+        device = cleanup(device)
+        action = cleanup(action)
+
         device = UserDevices.query.filter_by(device=device, email=user.email).first()
-        if device is not None:
-            db.session.add(DeviceAction(device.device_id, action))
-            db.session.commit()
+        if device is not None:  # ensure such a device exists and belongs to the user
+            code = Codes.query.filter_by(device_type=device.device_type, action=action).first()
+            if code is not None:  # ensure it is a valid command to add
+                db.session.add(DeviceAction(device.device_id, action))
+                db.session.commit()
         return redirect('/actions')
 
 
@@ -146,7 +169,7 @@ def addcommand():
 @login_required
 def removecommand():
     if request.method == 'POST':
-        id = int(request.form['id'])
+        id = request.form['id']
         action = DeviceAction.query.get(id)
         if action is not None:
             db.session.delete(action)
@@ -157,16 +180,21 @@ def removecommand():
 @app.route('/adddevice', methods=['POST'])
 @login_required
 def adddevice():
+    print 'entered fn'
     user = current_user
     device = request.form['device']
     device_id = int(request.form['device_id'])
+    man = request.form['man']
+    device_type = request.form['type']
+    print 'read data'
     # Check to see if there any devices under the same name
     possible_devices = UserDevices.query.filter_by(device=device, email=user.email).all()
     device_with_same_id = UserDevices.query.get(device_id)
     # Do not allow duplicate names for same user, unique id's
+    print 'checked registry'
     if len(possible_devices) == 0 and device_with_same_id is None:
         # Relate user to device
-        user_device = UserDevices(device_id, user.email, device)
+        user_device = UserDevices(device_id, user.email, device, man, device_type)
         db.session.add(user_device)
         db.session.commit()
         # Update the status for the device
@@ -211,22 +239,25 @@ def remove_device():
     return redirect('/profile')
 
 
-# endpoint for a device - the url it hits to get it's next command
-@app.route('/getcommand/<device>')
-def getcommand(device):
-    # This line gets all uncompleted actions for the specified device
-    # command = DeviceAction.query.filter_by(device=device, complete=False).first()
-    # if command is not None:
-    #   formated_string = str(command.action) + ' ' + str(command.id)
-    #   return formated_string
-    # else:
-    #   return str(0)
-    number = random.randint(0, 1)
-    return str(number)
+# the url it hits to get it's next command
+@app.route('/getcommand/<device_id>')
+def getcommand(device_id):
+    command = DeviceAction.query.filter_by(device_id=device_id, complete=False).first()
+    device = UserDevices.query.get(device_id)
+    code = Codes.query.filter_by(manufacturer=device.manufacturer, device_type=device.device_type,
+                                 action=command.action).first()
+    print code
+    if code is not None and command is not None:
+        num_elements = get_pulse_numbers(code.code)
+        formated_string = str(command.action_id) + '-' + str(num_elements) + '-' + code.code + '|'
+        print formated_string
+        return formated_string
+    else:
+      return str(0)
 
 
-@app.route('/completetask/device=<device>&task=<taskid>')
-def completetask(taskid, device):
+@app.route('/completetask/device=<device_id>&task=<taskid>')
+def completetask(taskid, device_id):
     try:
         device_action = DeviceAction.query.get(taskid)
         device_action.complete = True
@@ -237,10 +268,10 @@ def completetask(taskid, device):
         return '0'
 
 
-@app.route('/sendtemp/device=<device>&temp=<temp>')
-def sendtemp(device, temp):
+@app.route('/sendtemp/device=<device_id>&temp=<temp>')
+def sendtemp(device_id, temp):
     try:
-        device = DeviceStatus.query.filter_by(device).first()
+        device = DeviceStatus.query.get(device_id=device_id)
         device.update(temp=temp)
         db.session.commit()
         return '1'
@@ -249,7 +280,32 @@ def sendtemp(device, temp):
         return '0'
 
 
+@app.route('/test')
+def test():
+    return redirect(url_for('static', filename='test.xml'))
+
+
+### For a particular device type, get all possible actions
+def get_available_actions(device_type):
+    codes = Codes.query.filter_by(device_type=device_type)
+    possible_actions = []
+    for code in codes:
+        action = code.action
+        possible_actions.append(action)
+    return possible_actions
+
+
+### return the code in MSP readable formatting
+def get_pulse_numbers(code):
+    comma_count = 1  # first pulse is not preceeded by a comma
+    for c in code:
+        if c == ',':
+            comma_count += 1
+    return comma_count
+
+
 app.debug = True
+
 
 if __name__ == '__main__':
     db.create_all()

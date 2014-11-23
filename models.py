@@ -5,6 +5,21 @@ import time
 db = SQLAlchemy()
 
 
+class Codes(db.Model):
+    __tablename__ = 'codes'
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    manufacturer = db.Column(db.String(200))
+    device_type = db.Column(db.String(200))
+    action = db.Column(db.String(200))
+    code = db.Column(db.Text())  # code is comma separated, starting with the first high pulse
+
+    def __init__(self, man, type, action, code):
+        self.manufacturer = man
+        self.device_type = type
+        self.action = action
+        self.code = code
+
+
 # A class that holds a device's settings
 class DeviceSettings(db.Model):
     __tablename__ = 'device_settings'
@@ -66,14 +81,16 @@ class UserDevices(db.Model):
     __tablename__ = 'user_devices'
     device_id = db.Column(db.Integer(), primary_key=True)  # unique device ID
     email = db.Column(db.String(255), db.ForeignKey('user.email'))  # owner of the device
-    device = db.Column(db.String(50))  # Device's Common Name
-    type = db.Column(db.String(50))    # type of the device (ie manufacturer), not really in use now
+    device = db.Column(db.String(200))  # Device's Common Name
+    device_type = db.Column(db.String(200))    # type of the device (ie manufacturer), not really in use now
+    manufacturer = db.Column(db.String(200))
 
-    def __init__(self, device_id, email, device):
+    def __init__(self, device_id, email, device, man, d_type):
         self.device_id = device_id
         self.email = email
         self.device = device
-        self.type = 'GE'
+        self.manufacturer = man
+        self.device_type = d_type
 
 
 # class that holds user credentials
