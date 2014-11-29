@@ -121,6 +121,7 @@ def actions():
                            possible_actions=list(all_possible_actions))
 
 
+# See Current Devices, allows user to add some
 @app.route('/devices')
 @login_required
 def devices():
@@ -271,7 +272,7 @@ def completetask(taskid, device_id):
 @app.route('/sendtemp/device=<device_id>&temp=<temp>')
 def sendtemp(device_id, temp):
     try:
-        device = DeviceStatus.query.get(device_id=device_id)
+        device = DeviceStatus.query.get(device_id)
         device.update(temp=temp)
         db.session.commit()
         return '1'
