@@ -2,7 +2,7 @@
 
 {% block body%}
     <div class="pure-g">
-        <div class="c-center pure-u-1">
+        <div class="c-center pure-u-1-2">
         <h3> Pending Actions </h3>
             <div class="c_scroll">
                 <table class="pure-table  pure-table-bordered" border="1">
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="c-center pure-u-1">
+        <div class="c-center pure-u-1-2">
             <form class="pure-form pure-form-aligned" action="/addcommand" method="post">
                 <h3> Add an Action to Execute </h3>
                 <fieldset>
@@ -39,8 +39,26 @@
                         <label for="device">Device Name</label>
                         <select id="device" name="device">
                             {% for device in user_devices %}
-                            <option> {{ device.device }} ({{ device.device_type }})</option>
+                            <option> {{ device.device }} </option>
                             {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="manufacturer">Manufacturer</label>
+                        <select id="manufacturer" name="manufacturer">
+                           {%   for man in all_manfs %}
+                           <option> {{ man }}  </option>
+                           {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="pure-control-group">
+                        <label for="type">Device Type</label>
+                        <select id="type" name="type">
+                           {%   for type in all_types %}
+                           <option> {{ type }}  </option>
+                           {% endfor %}
                         </select>
                     </div>
 
@@ -48,7 +66,7 @@
                         <label for="action">Action</label>
                         <select id="action" name="action">
                            {%   for action in possible_actions %}
-                           <option> {{ action[0] }} ({{ action[1] }}) </option>
+                           <option> {{ action }}  </option>
                            {% endfor %}
                         </select>
                     </div>

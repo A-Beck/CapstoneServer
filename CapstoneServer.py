@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import User, UserDevices, DeviceStatus, DeviceAction, DeviceSettings, Codes, db
 from flask.ext.login import LoginManager, login_required, login_user, logout_user, current_user
-import random
-
 
 # TODO: Error Checking for all user generated values
 # TODO: Error Checking for DB accesses
@@ -105,35 +103,25 @@ def actions():
     user = current_user
     user_devices = UserDevices.query.filter_by(email=user.email).all()
     all_actions = []
-    all_possible_actions = set()
     for user_device in user_devices:
         device_id = user_device.device_id
         device_actions = DeviceAction.query.filter_by(device_id=device_id).all()
         for d_a in device_actions:
-            if (d_a.complete == False):
+            if d_a.complete == False:
                 all_actions.append({'Name': user_device.device, 'Action': d_a.action, 'Action id': d_a.action_id,
                                     'Device_id': device_id, 'Complete': d_a.complete})
-        available_actions = get_available_actions(user_device.device_type)
-        for action in available_actions:
-            all_possible_actions.add((action, user_device.device_type))
+    codes = Codes.query.all()
+    mans = set()
+    types = set()
+    all_possible_actions = set()
+    for code in codes:
+        mans.add(code.manufacturer)
+        types.add(code.device_type)
+        all_possible_actions.add(code.action)
+
 
     return render_template('actions.html', actions=all_actions, user_devices=user_devices,
-                           possible_actions=list(all_possible_actions))
-
-
-# See Current Devices, allows user to add some
-@app.route('/devices')
-@login_required
-def devices():
-    user = current_user
-    users_devices = UserDevices.query.filter_by(email=user.email).all()
-    device_list = []
-    for device in users_devices:
-        settings = DeviceSettings.query.get(device.device_id)
-        device_list.append({'Name': device.device, 'id': device.device_id, 'Man': device.manufacturer,
-                            'Type': device.device_type, 'Upper Temp': settings.upper_temp,
-                            'Lower Temp': settings.lower_temp})
-    return render_template('devices.html', device_list=device_list)
+                           all_manfs=list(mans), all_types=list(types), possible_actions=list(all_possible_actions))
 
 
 #adding a command to a device's command queue
@@ -144,24 +132,15 @@ def addcommand():
 
         user = current_user
         device = request.form['device']
+        type = request.form['type']
+        man = request.form['manufacturer']
         action = request.form['action']
-
-        #extra junk comes in with the form, clean it up
-        def cleanup(input_str):
-            ret = ''
-            for c in input_str:
-                if c == '(':
-                    break
-                ret += c
-            return ret.strip(' ')
-        device = cleanup(device)
-        action = cleanup(action)
 
         device = UserDevices.query.filter_by(device=device, email=user.email).first()
         if device is not None:  # ensure such a device exists and belongs to the user
-            code = Codes.query.filter_by(device_type=device.device_type, action=action).first()
+            code = Codes.query.filter_by(manufacturer=man, device_type=type, action=action).first()
             if code is not None:  # ensure it is a valid command to add
-                db.session.add(DeviceAction(device.device_id, action))
+                db.session.add(DeviceAction(device.device_id, action, code.id))
                 db.session.commit()
         return redirect('/actions')
 
@@ -178,24 +157,35 @@ def removecommand():
     return redirect('/actions')
 
 
+# See Current Devices, allows user to add some
+@app.route('/devices')
+@login_required
+def devices():
+    user = current_user
+    users_devices = UserDevices.query.filter_by(email=user.email).all()
+    device_list = []
+    for device in users_devices:
+        settings = DeviceSettings.query.get(device.device_id)
+        device_list.append({'Name': device.device,
+                            'id': device.device_id,
+                            'Upper Temp': settings.upper_temp,
+                            'Lower Temp': settings.lower_temp})
+    return render_template('devices.html', device_list=device_list)
+
+
 @app.route('/adddevice', methods=['POST'])
 @login_required
 def adddevice():
-    print 'entered fn'
     user = current_user
     device = request.form['device']
     device_id = int(request.form['device_id'])
-    man = request.form['man']
-    device_type = request.form['type']
-    print 'read data'
     # Check to see if there any devices under the same name
     possible_devices = UserDevices.query.filter_by(device=device, email=user.email).all()
     device_with_same_id = UserDevices.query.get(device_id)
     # Do not allow duplicate names for same user, unique id's
-    print 'checked registry'
     if len(possible_devices) == 0 and device_with_same_id is None:
         # Relate user to device
-        user_device = UserDevices(device_id, user.email, device, man, device_type)
+        user_device = UserDevices(device_id, user.email, device)
         db.session.add(user_device)
         db.session.commit()
         # Update the status for the device
@@ -244,14 +234,10 @@ def remove_device():
 @app.route('/getcommand/<device_id>')
 def getcommand(device_id):
     command = DeviceAction.query.filter_by(device_id=device_id, complete=False).first()
-    device = UserDevices.query.get(device_id)
-    code = Codes.query.filter_by(manufacturer=device.manufacturer, device_type=device.device_type,
-                                 action=command.action).first()
-    print code
+    code = Codes.query.get(command.code_id)
     if code is not None and command is not None:
         num_elements = get_pulse_numbers(code.code)
         formated_string = str(command.action_id) + '-' + str(num_elements) + '-' + code.code + '|'
-        print formated_string
         return formated_string
     else:
       return str(0)
@@ -284,16 +270,6 @@ def sendtemp(device_id, temp):
 @app.route('/test')
 def test():
     return redirect(url_for('static', filename='test.xml'))
-
-
-### For a particular device type, get all possible actions
-def get_available_actions(device_type):
-    codes = Codes.query.filter_by(device_type=device_type)
-    possible_actions = []
-    for code in codes:
-        action = code.action
-        possible_actions.append(action)
-    return possible_actions
 
 
 ### return the code in MSP readable formatting

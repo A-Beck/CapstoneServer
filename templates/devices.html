@@ -8,8 +8,6 @@
                     <thead>
                     <tr>
                         <th> Device Name </th>
-                        <th> Device Type </th>
-                        <th> Device Manufacturer </th>
                         <th> Upper Temp </th>
                         <th> Lower Temp </th>
                         <th> Change Settings </th>
@@ -20,8 +18,6 @@
                     {% for device in device_list %}
                         <tr>
                             <td> {{ device['Name'] }} </td>
-                            <td> {{ device['Type']  }}</td>
-                            <td> {{ device['Man'] }}</td>
                             <td> {{ device['Upper Temp'] }}</td>
                             <td> {{ device['Lower Temp'] }}</td>
                             <td>
@@ -56,7 +52,7 @@
                         <label for="device_id">Device ID</label>
                         <input id="device_id" type="text" placeholder="Device ID" name="device_id" />
                     </div>
-
+                    <!--
                     <div class="pure-control-group">
                         <label for="man">Manufacturer</label>
                         <select id="man" name="man">
@@ -72,6 +68,7 @@
                             <option>Bluetooth Speaker</option>
                         </select>
                     </div>
+                    -->
 
                     <div class="pure-controls">
                         <button type="submit" class="pure-button pure-button-primary">Add Device</button>

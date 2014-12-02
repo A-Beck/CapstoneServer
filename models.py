@@ -44,16 +44,17 @@ class DeviceAction(db.Model):
     __tablename__ = 'device_action'
     action_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     device_id = db.Column(db.Integer, db.ForeignKey('user_devices.device_id'))
+    code_id = db.Column(db.Integer, db.ForeignKey('codes.id'))
     action = db.Column(db.String(200))
     time = db.Column(db.Integer)
     complete = db.Column(db.Boolean)
 
-    def __init__(self, device_id, action):
+    def __init__(self, device_id, action, code):
         self.device_id = device_id
         self.action = action
+        self.code_id = code
         self.time = time.time()
         self.complete = False
-
 
 
 # class that hold the status of each device
@@ -82,15 +83,11 @@ class UserDevices(db.Model):
     device_id = db.Column(db.Integer(), primary_key=True)  # unique device ID
     email = db.Column(db.String(255), db.ForeignKey('user.email'))  # owner of the device
     device = db.Column(db.String(200))  # Device's Common Name
-    device_type = db.Column(db.String(200))    # type of the device (ie manufacturer), not really in use now
-    manufacturer = db.Column(db.String(200))
 
-    def __init__(self, device_id, email, device, man, d_type):
+    def __init__(self, device_id, email, device):
         self.device_id = device_id
         self.email = email
         self.device = device
-        self.manufacturer = man
-        self.device_type = d_type
 
 
 # class that holds user credentials
@@ -110,9 +107,6 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.pw_hash, password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password, password)
 
     def is_active(self):
         """True, as all users are active."""
