@@ -32,7 +32,7 @@
         </div>
 
         <div class="c-center pure-u-1-2">
-            <form class="pure-form pure-form-aligned" action="/addcommand" method="post">
+            <form name="addACommand" class="pure-form pure-form-aligned" action="/addcommand" method="post">
                 <h3> Add an Action to Execute </h3>
                 <fieldset>
                     <div class="pure-control-group">
@@ -46,7 +46,7 @@
 
                     <div class="pure-control-group">
                         <label for="manufacturer">Manufacturer</label>
-                        <select id="manufacturer" name="manufacturer">
+                        <select id="manufacturer" name="manufacturer" onChange="updateTypes(this.selectedIndex)">
                            {%   for man in all_manfs %}
                            <option> {{ man }}  </option>
                            {% endfor %}
@@ -55,9 +55,9 @@
 
                     <div class="pure-control-group">
                         <label for="type">Device Type</label>
-                        <select id="type" name="type">
+                        <select id="type" name="type" onchange="updateActions(this.selectedIndex)">
                            {%   for type in all_types %}
-                           <option> {{ type }}  </option>
+                           <option> {{ type.split('|')[1] }}  </option>
                            {% endfor %}
                         </select>
                     </div>
@@ -66,7 +66,7 @@
                         <label for="action">Action</label>
                         <select id="action" name="action">
                            {%   for action in possible_actions %}
-                           <option> {{ action }}  </option>
+                           <option> {{ action.rsplit('|',1)[1] }}  </option>
                            {% endfor %}
                         </select>
                     </div>
@@ -79,5 +79,53 @@
             </form>
         </div>
     </div>
+
+
+<script type="text/javascript">
+
+var manList=document.addACommand.manufacturer;
+var typeList=document.addACommand.type;
+var actionList=document.addACommand.action;
+
+var manfTypeMap = new Array();
+{% for man in all_manfs %}
+    manfTypeMap["{{ man }}"] = new Array();
+{%  endfor %}
+{% for type in all_types %}
+    manfTypeMap["{{ type.split('|')[0] }}"].push("{{ type.split('|')[1] }}");
+{% endfor %}
+
+var typeActionMap = new Array();
+{% for type in all_types %}
+   typeActionMap["{{ type }}"] = new Array();
+{% endfor %}
+{% for action in possible_actions %}
+    typeActionMap["{{ action.rsplit('|',1)[0] }}"].push("{{ action.rsplit('|',1)[1] }}")
+{% endfor %}
+
+
+function updateTypes(selectedManIndex) {
+    var man_name = manList[selectedManIndex].text;
+    typeList.options.length = 0;
+    for (var i = 0; i < manfTypeMap[man_name].length; i++) {
+        typeList.options[typeList.options.length] = new Option(manfTypeMap[man_name][i]);
+    }
+    updateActions(0);
+}
+
+function updateActions(selectedTypeIndex) {
+    var manSelect = document.getElementById( "manufacturer" );
+    var man = manSelect.options[ manSelect.selectedIndex ].value
+    var typeName = typeList[selectedTypeIndex].text;
+    var key = man+"|"+typeName;
+    actionList.options.length = 0;
+    for (var i = 0; i < typeActionMap[key].length; i++) {
+        actionList.options[actionList.options.length] = new Option(typeActionMap[key][i]);
+    }
+}
+
+updateTypes(0);
+
+</script>
 
 {% endblock %}

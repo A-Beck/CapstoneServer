@@ -116,8 +116,8 @@ def actions():
     all_possible_actions = set()
     for code in codes:
         mans.add(code.manufacturer)
-        types.add(code.device_type)
-        all_possible_actions.add(code.action)
+        types.add(code.manufacturer+"|"+code.device_type)
+        all_possible_actions.add(code.manufacturer+"|"+code.device_type+"|"+code.action)
 
 
     return render_template('actions.html', actions=all_actions, user_devices=user_devices,
@@ -237,7 +237,7 @@ def getcommand(device_id):
     code = Codes.query.get(command.code_id)
     if code is not None and command is not None:
         num_elements = get_pulse_numbers(code.code)
-        formated_string = str(command.action_id) + '-' + str(num_elements) + '-' + code.code + '|'
+        formated_string = "start code:"+str(command.action_id) + '-' + str(num_elements) + '-' + code.code + '|'
         return formated_string
     else:
       return str(0)
@@ -279,6 +279,11 @@ def get_pulse_numbers(code):
         if c == ',':
             comma_count += 1
     return comma_count
+
+
+## take action on uploaded temperatures
+def inspect_temps():
+    pass
 
 
 app.debug = True
